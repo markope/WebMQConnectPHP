@@ -17,6 +17,13 @@
 **
 ******************************************************************************/
 
+function urlsafe_b64encode($string)
+{
+   $data = base64_encode($string);
+   $data = str_replace(array('+','/'),array('-','_'),$data);
+   return $data;
+}
+
 class AutobahnPushClient
 {
 
@@ -42,6 +49,23 @@ class AutobahnPushClient
       $msg = json_encode($event);
 
       $data = array('topicuri' => $topic);
+      if ($this->opts['appkey'] !== null)
+      {
+         $timestamp = gmdate("Y-m-d\TH:i:s\Z");
+         $sig = urlsafe_b64encode(hash_hmac('sha256', $topic . $this->opts['appkey'] . $timestamp . $msg, $this->opts['appsecret'], true));
+         $data['timestamp'] = $timestamp;
+         $data['appkey'] = $this->opts['appkey'];
+         $data['signature'] = $sig;
+      }
+      if ($eligible !== null)
+      {
+         $data['eligible'] = join(',', $eligible);
+      }
+      if ($exclude !== null)
+      {
+         $data['exclude'] = join(',', $exclude);
+      }
+
       $url = $this->opts['pushto'] . '/?' . http_build_query($data, '', '&');
 
 		curl_setopt($ch, CURLOPT_URL, $url);

@@ -4,10 +4,14 @@
       <?php
          require('../../autobahnpush/autobahnpush.php');
 
-         $client = new AutobahnPushClient("http://127.0.0.1:8080");
-         $data = array("name" => $_POST['name'], "age" => $_POST['age']);
+         $server = "http://127.0.0.1:8080";
+         $appkey = "foobar";
+         $appsecret = "secret";
+         $client = new AutobahnPushClient($server, $appkey, $appsecret);
 
-         echo $client->push("http://example.com/topic1", $data);
+         $data = array("name" => $_POST['name'], "age" => $_POST['age']);
+         $topic = "http://example.com/topic1";
+         echo $client->push($topic, $data);
       ?>
    </body>
 </html>
