@@ -29,13 +29,12 @@ class AutobahnPushClient
 
 	private $opts = array ();
 
-	public function __construct($pushto, $appkey = null, $appsecret = null, $timeout = 5, $debug = false)
+	public function __construct($pushto, $appkey = null, $appsecret = null, $timeout = 5)
 	{
 		$this->opts['pushto'] = $pushto;
 		$this->opts['appkey'] = $appkey;
 		$this->opts['appsecret'] = $appsecret;
 		$this->opts['timeout'] = $timeout;
-		$this->opts['debug'] = $debug;
 	}
 
 	public function push($topic, $event, $eligible = null, $exclude = null)
@@ -76,23 +75,18 @@ class AutobahnPushClient
 		curl_setopt($ch, CURLOPT_TIMEOUT, $this->opts['timeout']);
 
 		$response = curl_exec($ch);
+      $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
 		curl_close($ch);
 
-      return $response;
-
-		if ($response == "202 ACCEPTED\n" && $debug == false)
-		{
-			return true;
-		}
-		elseif ($this->opts['debug'] == true)
-		{
-			return $response;
-		}
-		else
-		{
-			return false;
-		}
+      if ($status_code !== 202)
+      {
+         return $response;
+      }
+      else
+      {
+         return null;
+      }
 	}
 }
 

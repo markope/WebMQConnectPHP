@@ -11,7 +11,16 @@
 
          $data = array("name" => $_POST['name'], "age" => $_POST['age']);
          $topic = "http://example.com/topic1";
-         echo $client->push($topic, $data);
+
+         $result = $client->push($topic, $data);
+         if ($result !== null)
+         {
+            echo "Push failed: " . $result;
+         }
+         else
+         {
+            echo "Push succeeded";
+         }
       ?>
    </body>
 </html>
