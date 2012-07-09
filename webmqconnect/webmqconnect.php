@@ -24,6 +24,7 @@ function urlsafe_b64encode($string)
    return $data;
 }
 
+
 class WebMQConnectClient
 {
 
@@ -88,6 +89,198 @@ class WebMQConnectClient
          return null;
       }
 	}
+}
+
+/**
+ * Lookup if browser supports WebSocket (Hixie76, Hybi10+, RFC6455) natively,
+ * and if not, whether the web-socket-js Flash bridge works to polyfill that.
+ *
+ * Returns an array:
+ *
+ *   ws_supported       WebSocket is supported
+ *   needs_flash        Flash Bridge is needed for support
+ *   needs_hixie76      WebSocket Hixie-76 support is needed
+ *   detected           The code has explicitly mapped the support/nosupport
+ */
+function lookupWsSupport($ua = null)
+{
+   if ($ua === null) {
+      $ua = $_SERVER['HTTP_USER_AGENT'];
+   }
+
+   // ws_supported, needs_flash, detected
+   $ws = array();
+   $ws['user_agent'] = $ua;
+
+   // Internet Explorer
+   //
+   if (preg_match("*MSIE*", $ua)) {
+
+      // IE10 has native support
+      if (preg_match("*MSIE 10*", $ua)) {
+         $ws['ws_supported'] = true;
+         $ws['needs_flash'] = false;
+         $ws['needs_hixie76'] = false;
+         $ws['detected'] = true;
+         $ws['browser'] = 'IE10';
+         return $ws;
+      }
+
+      // Google Chrome Frame
+      if (preg_match("*chromeframe*", $ua)) {
+         $ws['ws_supported'] = true;
+         $ws['needs_flash'] = false;
+         $ws['needs_hixie76'] = false;
+         $ws['detected'] = true;
+         $ws['browser'] = 'IE with Chrome Frame';
+         return $ws;
+      }
+
+      // Flash fallback
+      if (preg_match("*MSIE 8*", $ua) || preg_match("*MSIE 9*", $ua)) {
+         $ws['ws_supported'] = true;
+         $ws['needs_flash'] = true;
+         $ws['needs_hixie76'] = false;
+         $ws['detected'] = true;
+         $ws['browser'] = 'IE8/9';
+         return $ws;
+      }
+
+      // unsupported
+      $ws['ws_supported'] = false;
+      $ws['needs_flash'] = false;
+      $ws['needs_hixie76'] = false;
+      $ws['detected'] = true;
+      $ws['browser'] = 'IE/Unsupported';
+      return $ws;
+   }
+
+   // iOS
+   //
+   if (preg_match("*iPhone*", $ua) || preg_match("*iPad*", $ua) || preg_match("*iPod*", $ua)) {
+      $ws['ws_supported'] = true;
+      $ws['needs_flash'] = false;
+      $ws['needs_hixie76'] = true;
+      $ws['detected'] = true;
+      $ws['browser'] = 'WebKit/iOS';
+      return $ws;
+   }
+
+   // Android
+   //
+   if (preg_match("*Android*", $ua)) {
+
+      // Firefox Mobile
+      if (preg_match("*Firefox*", $ua)) {
+         $ws['ws_supported'] = true;
+         $ws['needs_flash'] = false;
+         $ws['needs_hixie76'] = false;
+         $ws['detected'] = true;
+         $ws['browser'] = 'Firefox Mobile';
+         return $ws;
+      }
+
+      // Opera Mobile
+      if (preg_match("*Opera*", $ua)) {
+         $ws['ws_supported'] = true;
+         $ws['needs_flash'] = false;
+         $ws['needs_hixie76'] = true;
+         $ws['detected'] = true;
+         $ws['browser'] = 'Opera Mobile';
+         return $ws;
+      }
+
+      // Chrome for Android
+      if (preg_match("*CoMo*", $ua)) {
+         $ws['ws_supported'] = true;
+         $ws['needs_flash'] = false;
+         $ws['needs_hixie76'] = false;
+         $ws['detected'] = true;
+         $ws['browser'] = 'Chrome for Android';
+         return $ws;
+      }
+
+      // Android builtin browser
+      if (preg_match("*AppleWebKit*", $ua)) {
+         $ws['ws_supported'] = true;
+         $ws['needs_flash'] = true;
+         $ws['needs_hixie76'] = false;
+         $ws['detected'] = true;
+         $ws['browser'] = 'Android/Builtin';
+         return $ws;
+      }
+
+      // detection problem
+      $ws['ws_supported'] = false;
+      $ws['needs_flash'] = false;
+      $ws['needs_hixie76'] = false;
+      $ws['detected'] = false;
+      $ws['browser'] = 'Undetected';
+      return $ws;
+   }
+
+   // webOS
+   //
+   if (preg_match("*hpwOS*", $ua) || preg_match("*webos*", $ua)) {
+      $ws['ws_supported'] = true;
+      $ws['needs_flash'] = false;
+      $ws['needs_hixie76'] = true;
+      $ws['detected'] = true;
+      $ws['browser'] = 'WebKit/webOS';
+      return $ws;
+   }
+
+   // Opera
+   //
+   if (preg_match("*Opera*", $ua)) {
+      $ws['ws_supported'] = true;
+      $ws['needs_flash'] = false;
+      $ws['needs_hixie76'] = true;
+      $ws['detected'] = true;
+      $ws['browser'] = 'Opera';
+      return $ws;
+   }
+
+   // Firefox
+   //
+   if (preg_match("*Firefox*", $ua)) {
+      $ws['ws_supported'] = true;
+      $ws['needs_flash'] = false;
+      $ws['needs_hixie76'] = false;
+      $ws['detected'] = true;
+      $ws['browser'] = 'Firefox';
+      return $ws;
+   }
+
+   // Safari
+   //
+   if (preg_match("*Safari*", $ua) && !preg_match("*Chrome*", $ua)) {
+      $ws['ws_supported'] = true;
+      $ws['needs_flash'] = false;
+      $ws['needs_hixie76'] = true;
+      $ws['detected'] = true;
+      $ws['browser'] = 'Safari';
+      return $ws;
+   }
+
+   // Chrome
+   //
+   if (preg_match("*Chrome*", $ua)) {
+      $ws['ws_supported'] = true;
+      $ws['needs_flash'] = false;
+      $ws['needs_hixie76'] = false;
+      $ws['detected'] = true;
+      $ws['browser'] = 'Chrome';
+      return $ws;
+   }
+
+   // detection problem
+   //
+   $ws['ws_supported'] = false;
+   $ws['needs_flash'] = false;
+   $ws['needs_hixie76'] = false;
+   $ws['detected'] = false;
+   $ws['browser'] = 'Undetected';
 }
 
 ?>
