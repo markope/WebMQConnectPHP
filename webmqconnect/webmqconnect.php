@@ -24,16 +24,16 @@ function urlsafe_b64encode($string)
    return $data;
 }
 
-class AutobahnPushClient
+class WebMQConnectClient
 {
 
 	private $opts = array ();
 
-	public function __construct($pushto, $appkey = null, $appsecret = null, $timeout = 5)
+	public function __construct($pushendpoint, $authkey = null, $authsecret = null, $timeout = 5)
 	{
-		$this->opts['pushto'] = $pushto;
-		$this->opts['appkey'] = $appkey;
-		$this->opts['appsecret'] = $appsecret;
+		$this->opts['pushendpoint'] = $pushendpoint;
+		$this->opts['authkey'] = $authkey;
+		$this->opts['authsecret'] = $authsecret;
 		$this->opts['timeout'] = $timeout;
 	}
 
@@ -48,12 +48,12 @@ class AutobahnPushClient
       $msg = json_encode($event);
 
       $data = array('topicuri' => $topic);
-      if ($this->opts['appkey'] !== null)
+      if ($this->opts['authkey'] !== null)
       {
          $timestamp = gmdate("Y-m-d\TH:i:s\Z");
-         $sig = urlsafe_b64encode(hash_hmac('sha256', $topic . $this->opts['appkey'] . $timestamp . $msg, $this->opts['appsecret'], true));
+         $sig = urlsafe_b64encode(hash_hmac('sha256', $topic . $this->opts['authkey'] . $timestamp . $msg, $this->opts['authsecret'], true));
          $data['timestamp'] = $timestamp;
-         $data['appkey'] = $this->opts['appkey'];
+         $data['authkey'] = $this->opts['authkey'];
          $data['signature'] = $sig;
       }
       if ($eligible !== null)
@@ -65,7 +65,7 @@ class AutobahnPushClient
          $data['exclude'] = join(',', $exclude);
       }
 
-      $url = $this->opts['pushto'] . '/?' . http_build_query($data, '', '&');
+      $url = $this->opts['pushendpoint'] . '/?' . http_build_query($data, '', '&');
 
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/x-www-form-urlencoded", "User-Agent: AutobahnPushPHP") );
