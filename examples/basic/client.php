@@ -9,17 +9,16 @@
       <script>
 
          // Tavendo WebMQ WebSocket/WAMP URL
-         //var wsuri = "wss://autobahn-euwest.tavendo.de";
          var wsuri = "<?php echo $_POST['wsuri']; ?>";
 
          // The topic we use
-         //var topic = "http://autobahn.tavendo.de/public/demo/topic1";
          var topic = "<?php echo $_POST['topic']; ?>";
 
-         // will hold our WAMP client session
+         // will hold our WebSocket/WAMP client session
          var session = null;
 
          window.onload = function() {
+            
             // connect upon window load
             connect();
          };
@@ -33,7 +32,9 @@
                function (sess) {
                   log("connected", wsuri);
                   session = sess;
-                  onConnect0();
+
+                  // continue with authentication ..
+                  onConnect();
                },
 
                // called when connection was lost, failed or on reconnects
@@ -44,7 +45,7 @@
          }
 
          // authenticate as "anonymous"
-         function onConnect0() {
+         function onConnect() {
             session.authreq().then(function () {
                session.auth().then(onAuth, log);
             }, log);
@@ -53,12 +54,14 @@
          // we are now authenticated
          function onAuth(permissions) {
             log("authenticated", permissions);
-            session.subscribe(topic, onMyEvent);
+
+            // subscribe to our topic
+            session.subscribe(topic, onEvent);
             log("subscribed", topic);
          };
 
-         // we received an event
-         function onMyEvent(topic, event) {
+         // we have received an event on our topic
+         function onEvent(topic, event) {
             log("event", topic, event);
          };
 
